@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -8,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 )
 
 // curl https://neutrinoapi.net/ip-info \
@@ -42,10 +44,17 @@ func main() {
 		return
 	}
 
-	// Add headers
-	// TODO READ THESE FROM A DOTFILE CALLED .env
-	req.Header.Add("User-ID", "")
-	req.Header.Add("API-Key", "")
+	// Read user-specific header values from a dotfile
+	headers, err := readHeadersFromDotfile(".env")
+	if err != nil {
+		fmt.Println("Failed to read headers from .env:", err)
+		return
+	}
+
+	// Put all values read from the dotfile as header entries
+	for key, value := range headers {
+		req.Header.Add(key, value)
+	}
 
 	// Send the request
 	client := &http.Client{}
@@ -77,4 +86,31 @@ func Print(input string) {
 		return
 	}
 	fmt.Println(prettyJSON.String())
+}
+
+func readHeadersFromDotfile(filename string) (map[string]string, error) {
+	headers := make(map[string]string)
+
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		parts := strings.SplitN(line, ":", 2)
+		if len(parts) == 2 {
+			key := strings.TrimSpace(parts[0])
+			value := strings.TrimSpace(parts[1])
+			headers[key] = value
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	return headers, nil
 }
