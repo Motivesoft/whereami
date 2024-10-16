@@ -99,7 +99,13 @@ func readHeadersFromDotfile(filename string) (map[string]string, error) {
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		line := scanner.Text()
+		line := strings.TrimSpace(scanner.Text())
+
+		// Ignore empty lines and comment lines (starting with #)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+
 		parts := strings.SplitN(line, ":", 2)
 		if len(parts) == 2 {
 			key := strings.TrimSpace(parts[0])
