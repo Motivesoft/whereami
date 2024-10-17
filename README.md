@@ -3,7 +3,12 @@ Call a geolocation service with an IP address to obtain location information
 
 ## Usage
 
-`whereami [ip address]`
+The IP address to check can be provided as a command line argument or as piped input.
+
+```shell
+whereami [ip address]
+cat ipaddress.txt | whereami
+```
 
 ## Building
 

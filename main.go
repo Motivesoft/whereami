@@ -20,9 +20,23 @@ import (
 func main() {
 	apiURL := "https://neutrinoapi.net/ip-info"
 
-	if len(os.Args) < 2 {
-		fmt.Println("Pass IP address as command line parameter")
-		return
+	// Accept the IP address to check as piped input or a command line argument
+	var ipAddress string
+
+	stat, _ := os.Stdin.Stat()
+	if (stat.Mode() & os.ModeCharDevice) == 0 {
+		// Data is being piped to stdin
+		reader := bufio.NewReader(os.Stdin)
+		ipAddress, _ = reader.ReadString('\n')
+		// Process the input
+	} else if len(os.Args) > 1 {
+		// Use command-line argument
+		ipAddress = os.Args[1]
+		// Process the input
+	} else {
+		// No piped input and no command-line argument
+		fmt.Println("Pass an IP address as command line parameter or as piped input")
+		os.Exit(1)
 	}
 
 	// Create URL with query parameters
@@ -33,7 +47,7 @@ func main() {
 	}
 
 	params := url.Values{}
-	params.Add("ip", os.Args[1])
+	params.Add("ip", ipAddress)
 	params.Add("reverse-lookup", "false")
 	baseURL.RawQuery = params.Encode()
 
